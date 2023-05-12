@@ -4,7 +4,7 @@
 
 2. Generate SSH keys: Generate an SSH key pair on the control node (e.g. Linux) using the ssh-keygen command. This will create a public and private key. Copy the public key to the Windows host using a secure method (e.g. SCP).
 
-3. Install the public key: Create a directory on the Windows host to store the authorized keys (e.g. C:\Users\ansibleuser\.ssh). Then, copy the public key to this directory and rename it to authorized_keys. Make sure to set the correct permissions on the directory and file (read-only for the ansibleuser account).
+3. Install the public key: Create a directory on the Windows host to store the authorized keys (e.g. C:\Users\ansibleuser\\.ssh). Then, copy the public key to this directory and rename it to authorized_keys. Make sure to set the correct permissions on the directory and file (read-only for the ansibleuser account).
 
 4. Configure OpenSSH for Windows: Edit the sshd_config file (located in C:\ProgramData\ssh) to allow SSH connections from the control node. Set the following options:
 
