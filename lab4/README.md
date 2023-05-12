@@ -1,5 +1,7 @@
 Install VirtualBox and Vagrant on your Linux machine.
 
+More info here: https://developer.hashicorp.com/vagrant/downloads?product_intent=vagrant
+
 Create a new directory for your Vagrant project, e.g. ansible-windows-lab, and navigate into it.
 
 Create a new Vagrantfile in the directory with the following contents:
