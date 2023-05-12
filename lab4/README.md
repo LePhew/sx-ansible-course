@@ -8,7 +8,7 @@ Create a new Vagrantfile in the directory with the following contents:
 
 ```
 Vagrant.configure("2") do |config|
-  config.vm.box = "mwrock/Windows2019"
+  config.vm.box = "StefanScherer/windows_2019"
 
   config.vm.provider "virtualbox" do |vb|
     vb.memory = "2048"
