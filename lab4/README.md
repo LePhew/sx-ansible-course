@@ -1,94 +1,23 @@
-Install VirtualBox and Vagrant on your Linux machine.
+## Configuring Windows Host to use (SSH)
 
-More info here: https://developer.hashicorp.com/vagrant/downloads?product_intent=vagrant
+1. Install OpenSSH for Windows: Download and install the OpenSSH for Windows package from the official website. Make sure to choose the correct architecture (32-bit or 64-bit) and version (latest stable release).
 
-Create a new directory for your Vagrant project, e.g. ansible-windows-lab, and navigate into it.
+2. Generate SSH keys: Generate an SSH key pair on the control node (e.g. Linux) using the ssh-keygen command. This will create a public and private key. Copy the public key to the Windows host using a secure method (e.g. SCP).
 
-Create a new Vagrantfile in the directory with the following contents:
+3. Install the public key: Create a directory on the Windows host to store the authorized keys (e.g. C:\Users\ansibleuser\.ssh). Then, copy the public key to this directory and rename it to authorized_keys. Make sure to set the correct permissions on the directory and file (read-only for the ansibleuser account).
 
-```
-Vagrant.configure("2") do |config|
-  config.vm.box = "StefanScherer/windows_2019"
-
-  config.vm.provider "virtualbox" do |vb|
-    vb.memory = "2048"
-  end
-
-  config.vm.provision "ansible" do |ansible|
-    ansible.playbook = "windows.yml"
-    ansible.extra_vars = {
-      ansible_user: "vagrant",
-      ansible_password: "vagrant",
-      ansible_port: "5986",
-      ansible_connection: "winrm",
-      ansible_winrm_transport: "ntlm",
-      ansible_winrm_server_cert_validation: "ignore"
-    }
-  end
-end
-```
-
-This Vagrantfile will create a new Windows Server 2019 virtual machine and configure it for Ansible using the ansible_local provisioner.
-
-Create a new Ansible playbook in the same directory called windows.yml, with the following contents:
-
+4. Configure OpenSSH for Windows: Edit the sshd_config file (located in C:\ProgramData\ssh) to allow SSH connections from the control node. Set the following options:
 
 ```
-- hosts: all
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  tasks:
-    - name: Enable WinRM
-      win_reboot:
-        reboot_timeout: 3600
-        test_command: dir C:\
-      become: true
-      become_method: runas
-
-    - name: Install PowerShell 7
-      win_chocolatey:
-        name: powershell-core
-        state: present
-        version: 7.0.3
-      become: true
-      become_method: runas
-
-    - name: Set PowerShell Execution Policy
-      win_shell: Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope LocalMachine -Force
-      become: true
-      become_method: runas
-
-    - name: Install WinRM HTTPS Certificate
-      win_certificate_store:
-        path: "{{ playbook_dir }}/winrm.crt"
-        store_location: LocalMachine
-        store_name: Root
-      become: true
-      become_method: runas
-
-    - name: Import WinRM HTTPS Certificate
-      win_shell: Import-Certificate -FilePath "{{ playbook_dir }}/winrm.crt" -CertStoreLocation Cert:\LocalMachine\Root -Verbose
-      become: true
-      become_method: runas
-```
-This playbook will enable WinRM, install PowerShell 7, set the PowerShell execution policy, and configure WinRM HTTPS with a self-signed certificate.
-
-Create a new self-signed certificate for WinRM HTTPS by running the following commands on your Linux control node:
-
-```
-$ openssl req -newkey rsa:2048 -nodes -keyout winrm.key -x509 -days 365 -out winrm.crt 
-$ cat winrm.key winrm.crt > winrm.pem
+PasswordAuthentication no
+PubkeyAuthentication yes
+AuthorizedKeysFile  %h\.ssh\authorized_keys
 ```
 
-These commands will create a private key and a self-signed certificate for WinRM HTTPS, and combine them into a single PEM file.
+Note: make sure to uncomment the AuthorizedKeysFile option if it is commented out.
 
-Copy the winrm.pem file to the ansible-windows-lab directory on your Linux control node.
+5. Start the OpenSSH service: Start the OpenSSH service on the Windows host using the Services management console or the net start sshd command.
 
-Start the Vagrant virtual machine by running vagrant up in the ansible-windows-lab directory.
+6. Test the connection: From the control node, use the ssh command to connect to the Windows host using the ansibleuser account and the private key. If everything is configured correctly, you should be able to log in without entering a password.
 
-Once the virtual machine is running, you can connect to it with Ansible by adding the following to your inventory file:
-
-```
-[windows]
-192.168.33.10 ansible_user=vagrant ansible_password=vagrant ansible_port=5986 ansible_connection=winrm ansible_winrm
-```
+Once the Windows host is configured for SSH authentication, you can use it as a target in your Ansible playbooks by specifying the SSH connection parameters in the inventory file (e.g. ansible_host, ansible_user, private_key).
